@@ -11,6 +11,7 @@ import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.TimeUtils;
+import com.nopo.game.Config;
 
 public class Game extends com.badlogic.gdx.Game {
 
@@ -20,10 +21,10 @@ public class Game extends com.badlogic.gdx.Game {
     public Texture black;
     static long lastCatched = -1;
     static Rectangle pointer;
-    public static boolean usePointer = true;
 
     public void create() {
         batch = new SpriteBatch();
+        Config.loadConfig();
         // Uses a ttf font so i can scale it up without it looking like doody water
         // well i mean it still does
         FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("OpenSans-Regular.ttf"));
@@ -67,7 +68,7 @@ public class Game extends com.badlogic.gdx.Game {
         if ((pointer.x > 800 || pointer.y > 480 || pointer.x < 0 || pointer.y < 0) || (Gdx.input.isKeyPressed(Input.Keys.ALT_LEFT))) {
             Gdx.input.setCursorCatched(false);
         } else if (TimeUtils.millis() - lastCatched > 3000 || lastCatched == -1) {
-            if (usePointer) {
+            if (Config.usePointer) {
                 Gdx.input.setCursorCatched(true);
             }
             lastCatched = TimeUtils.millis();

@@ -5,14 +5,12 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.Sprite;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
-import com.nopo.game.screens.Game;
+import com.nopo.game.Config;
 
 public class GameScreen implements Screen {
 
@@ -146,7 +144,7 @@ public class GameScreen implements Screen {
         game.font.draw(game.batch, "clown", 100, 200);
         game.batch.draw(playerTexture, player.x, player.y, player.width, player.height);
 
-        if (Game.usePointer) {
+        if (Config.usePointer) {
             game.batch.draw(game.cursor, Game.pointer.x, Game.pointer.y, Game.pointer.width, Game.pointer.height);
         }
         game.batch.end();
@@ -161,7 +159,7 @@ public class GameScreen implements Screen {
 
     @Override
     public void show() {
-        Gdx.input.setCursorCatched(false);
+        Gdx.input.setCursorCatched(Config.usePointer);
     }
 
     @Override

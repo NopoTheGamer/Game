@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.ScreenUtils;
+import com.nopo.game.Config;
 
 public class MainMenuScreen implements Screen {
 
@@ -60,7 +61,7 @@ public class MainMenuScreen implements Screen {
         game.font.draw(game.batch, "Settings", configRec.x, configRec.y + configRec.height);
 
         // Cursor
-        if (Game.usePointer) {
+        if (Config.usePointer) {
             game.batch.draw(game.cursor, Game.pointer.x, Game.pointer.y, Game.pointer.width, Game.pointer.height);
         }
 
@@ -83,7 +84,7 @@ public class MainMenuScreen implements Screen {
 
     @Override
     public void show() {
-        Gdx.input.setCursorCatched(false);
+        Gdx.input.setCursorCatched(Config.usePointer);
     }
 
     @Override

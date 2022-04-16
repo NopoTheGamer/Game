@@ -6,7 +6,9 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.ScreenUtils;
+import com.nopo.game.Config;
 
 public class ConfigScreen implements Screen {
 
@@ -58,7 +60,7 @@ public class ConfigScreen implements Screen {
         game.font.draw(game.batch, "Config", 350, 450);
         game.font.draw(game.batch, "Use custom cursor?", cursorButton.x, cursorButton.y + cursorButton.height);
         // Cursor
-        if (Game.usePointer) {
+        if (Config.usePointer) {
             game.batch.draw(game.cursor, Game.pointer.x, Game.pointer.y, Game.pointer.width, Game.pointer.height);
         }
         game.batch.end();
@@ -67,15 +69,15 @@ public class ConfigScreen implements Screen {
             game.setScreen(new MainMenuScreen(game));
             dispose();
         } else if (Gdx.input.justTouched() && cursorButton.overlaps(Game.pointer)) {
-            Game.usePointer = !Game.usePointer;
-            Gdx.input.setCursorCatched(Game.usePointer);
-
+            Config.usePointer = !Config.usePointer;
+            Gdx.input.setCursorCatched(Config.usePointer);
+            Config.writeConfig();
         }
     }
 
     @Override
     public void show() {
-        Gdx.input.setCursorCatched(false);
+        Gdx.input.setCursorCatched(Config.usePointer);
     }
 
     @Override
