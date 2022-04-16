@@ -3,9 +3,6 @@ package com.nopo.game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.audio.Music;
-import com.badlogic.gdx.audio.Sound;
-import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
@@ -16,6 +13,8 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
 
+import java.util.Iterator;
+
 public class GameScreen implements Screen {
 
     final Game game;
@@ -24,9 +23,12 @@ public class GameScreen implements Screen {
     Texture playerTexture;
     Texture sandTile;
     Texture testTile;
+    Texture rockTile;
     OrthographicCamera camera;
     Rectangle player;
     Array<Rectangle> sandTiles;
+    Array<Rectangle> rockTiles;
+    Array<Rectangle> playerCollision;
     long lastDropTime;
     int dropsGathered;
     Vector3 touchPos = new Vector3();
@@ -41,14 +43,16 @@ public class GameScreen implements Screen {
     float cameraOffsetX;
     float cameraOffsetY;
     int coolandepiccounter = 0;
+    int[] rocksX = new int[]{2, 3, 4, 5, 6};
+    int[] rocksY = new int[]{1, 3, 4, 5, 6};
 
     public GameScreen(final Game game) {
         this.game = game;
 
-        playerTexture = new Texture(Gdx.files.internal("dude.png"));
+        playerTexture = new Texture(Gdx.files.internal("player.png"));
         sandTile = new Texture(Gdx.files.internal("sand.png"));
         testTile = new Texture(Gdx.files.internal("test.png"));
-
+        rockTile = new Texture(Gdx.files.internal("rock.png"));
         float w = Gdx.graphics.getWidth();
         float h = Gdx.graphics.getHeight();
 
@@ -63,22 +67,14 @@ public class GameScreen implements Screen {
         player.y = -500;
         player.width = 64;
         player.height = 64;
+
     }
 
-    private void spawnSand() {
-        for (int i = 0; i < WORLD_WIDTH; i += 64) {
-            for (int ii = 0; ii < WORLD_HEIGHT; ii += 64) {
-                Rectangle sand = new Rectangle();
-                sand.x = i;
-                sand.y = ii;
-                sand.width = 64;
-                sand.height = 64;
-                sandTiles.add(sand);
-            }
-        }
-    }
 
     private void handleInput() {
+        playerCollision = new Array<Rectangle>();
+        spawnPlayers();
+        //TODO make this work
         cameraOffsetX = (camera.position.x - playerCameraOffsetX);
         cameraOffsetY = (camera.position.y - playerCameraOffsetY);
         if (Gdx.input.isKeyJustPressed(Input.Keys.A)) {
@@ -94,7 +90,7 @@ public class GameScreen implements Screen {
             player.x += 64;
         }
         if (Gdx.input.isKeyJustPressed(Input.Keys.S)) {
-            if (player.y - (int) cameraOffsetY <= 0) {
+            if (player.y - (int) cameraOffsetY <= 64) {
                 camera.translate(0, -64, 0);
             }
             player.y -= 64;
@@ -112,12 +108,10 @@ public class GameScreen implements Screen {
         System.out.println("camera y: " + (camera.position.y - playerCameraOffsetY));
         System.out.println();
         System.out.println(player.x - (camera.position.x - playerCameraOffsetX));
-        if (player.x < 0) {
-            player.x = 32;
-        }
-        if (player.y < 97){
-            player.y = 96 + 64;
-        }
+
+
+        player.x = MathUtils.clamp(player.x, 0, WORLD_WIDTH - 96);
+        player.y = MathUtils.clamp(player.y, 128, WORLD_HEIGHT - 192);
         camera.position.x = MathUtils.clamp(camera.position.x, (viewportWidth * camera.zoom) / 2f, WORLD_WIDTH - (viewportWidth * camera.zoom) / 2f);
         camera.position.y = MathUtils.clamp(camera.position.y, (viewportHeight * camera.zoom) / 2f, WORLD_HEIGHT - (viewportHeight * camera.zoom) / 2f);
 
@@ -131,19 +125,15 @@ public class GameScreen implements Screen {
         camera.unproject(touchPos);
         // used to clear the screen.
         ScreenUtils.clear(0, 0, 0, 1);
-
-        // tell the camera to update its matrices.
         camera.update();
-
         // tell the SpriteBatch to render in the
         // coordinate system specified by the camera.
         game.batch.setProjectionMatrix(camera.combined);
-
-        //Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-
         game.batch.begin();
         sandTiles = new Array<Rectangle>();
         spawnSand();
+        rockTiles = new Array<Rectangle>();
+        spawnRocks();
         coolandepiccounter = 0;
         for (Rectangle sand : sandTiles) {
             coolandepiccounter++;
@@ -153,21 +143,24 @@ public class GameScreen implements Screen {
                 game.batch.draw(testTile, sand.x, sand.y, sand.width, sand.height);
             }
         }
+        for (Rectangle rock : rockTiles) {
+            game.batch.draw(rockTile, rock.x, rock.y, rock.width, rock.height);
+        }
         game.font.draw(game.batch, "clown", 100, 200);
         game.batch.draw(playerTexture, player.x, player.y, player.width, player.height);
         game.batch.end();
     }
 
     @Override
-    public void show() {
-
+    public void resize(int width, int height) {
+        camera.viewportWidth = viewportWidth;                 // Viewport of 30 units!
+        camera.viewportHeight = viewportHeight * height / width; // Lets keep things in proportion.
+        camera.update();
     }
 
     @Override
-    public void resize(int width, int height) {
-        camera.viewportWidth = viewportWidth;                 // Viewport of 30 units!
-        camera.viewportHeight = viewportHeight * height/width; // Lets keep things in proportion.
-        camera.update();
+    public void show() {
+
     }
 
     @Override
@@ -188,6 +181,61 @@ public class GameScreen implements Screen {
     @Override
     public void dispose() {
         sandTile.dispose();
-        playerTexture.dispose();
+
+    }
+
+    private void spawnSand() {
+        for (int i = 0; i < WORLD_WIDTH; i += 64) {
+            for (int ii = 0; ii < WORLD_HEIGHT; ii += 64) {
+                Rectangle sand = new Rectangle();
+                sand.x = i;
+                sand.y = ii;
+                sand.width = 64;
+                sand.height = 64;
+                sandTiles.add(sand);
+            }
+        }
+    }
+
+    private void spawnRocks() {
+        if (rocksY.length == rocksX.length) {
+            for (int i = 0; i < rocksX.length; i++) {
+                Rectangle rock = new Rectangle();
+                rock.x = (rocksX[i] - 1) * 64;
+                rock.y = (rocksY[i] + 1) * 64;
+                rock.width = 64;
+                rock.height = 64;
+                rockTiles.add(rock);
+            }
+        } else {
+            throw new RuntimeException("Rocks X and Y arrays are not the same length!");
+        }
+    }
+
+    private void spawnPlayers() {
+        for (int i = 0; i < 4; i++) {
+            Rectangle playerCollisionRec = new Rectangle();
+            switch (i) {
+                case 0 -> {
+                    playerCollisionRec.x = player.x;
+                    playerCollisionRec.y = player.y - 64;
+                }
+                case 1 -> {
+                    playerCollisionRec.x = player.x + 64;
+                    playerCollisionRec.y = player.y;
+                }
+                case 2 -> {
+                    playerCollisionRec.x = player.x - 64;
+                    playerCollisionRec.y = player.y;
+                }
+                case 3 -> {
+                    playerCollisionRec.x = player.x;
+                    playerCollisionRec.y = player.y + 64;
+                }
+            }
+            playerCollisionRec.width = 64;
+            playerCollisionRec.height = 64;
+            playerCollision.add(playerCollisionRec);
+        }
     }
 }
