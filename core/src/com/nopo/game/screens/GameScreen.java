@@ -1,4 +1,4 @@
-package com.nopo.game;
+package com.nopo.game.screens;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
@@ -12,8 +12,7 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
-
-import java.util.Iterator;
+import com.nopo.game.screens.Game;
 
 public class GameScreen implements Screen {
 
@@ -29,15 +28,11 @@ public class GameScreen implements Screen {
     Array<Rectangle> sandTiles;
     Array<Rectangle> rockTiles;
     Array<Rectangle> playerCollision;
-    long lastDropTime;
-    int dropsGathered;
     Vector3 touchPos = new Vector3();
     static final int WORLD_WIDTH = 5000;
     static final int WORLD_HEIGHT = 5000;
     static float viewportWidth = 960;
     static float viewportHeight = 960;
-    private SpriteBatch batch;
-    private Sprite mapSprite;
     final int playerCameraOffsetX = 304;
     final int playerCameraOffsetY = 176;
     float cameraOffsetX;
@@ -113,7 +108,7 @@ public class GameScreen implements Screen {
         player.x = MathUtils.clamp(player.x, 0, WORLD_WIDTH - 96);
         player.y = MathUtils.clamp(player.y, 128, WORLD_HEIGHT - 192);
         camera.position.x = MathUtils.clamp(camera.position.x, (viewportWidth * camera.zoom) / 2f, WORLD_WIDTH - (viewportWidth * camera.zoom) / 2f);
-        camera.position.y = MathUtils.clamp(camera.position.y, (viewportHeight * camera.zoom) / 2f, WORLD_HEIGHT - (viewportHeight * camera.zoom) / 2f);
+        camera.position.y = MathUtils.clamp(camera.position.y, ((viewportHeight * camera.zoom) / 2f) - 6, WORLD_HEIGHT - (viewportHeight * camera.zoom) / 2f);
 
 
     }
@@ -121,10 +116,12 @@ public class GameScreen implements Screen {
     @Override
     public void render(float delta) {
         handleInput();
-        touchPos.set(Gdx.input.getX(), Gdx.input.getY(), 0);
-        camera.unproject(touchPos);
+        Game.setUpTouchPos(touchPos, camera);
         // used to clear the screen.
         ScreenUtils.clear(0, 0, 0, 1);
+
+        Game.cursorPos(Game.pointer, touchPos);
+
         camera.update();
         // tell the SpriteBatch to render in the
         // coordinate system specified by the camera.
@@ -148,19 +145,23 @@ public class GameScreen implements Screen {
         }
         game.font.draw(game.batch, "clown", 100, 200);
         game.batch.draw(playerTexture, player.x, player.y, player.width, player.height);
+
+        if (Game.usePointer) {
+            game.batch.draw(game.cursor, Game.pointer.x, Game.pointer.y, Game.pointer.width, Game.pointer.height);
+        }
         game.batch.end();
     }
 
     @Override
     public void resize(int width, int height) {
-        camera.viewportWidth = viewportWidth;                 // Viewport of 30 units!
-        camera.viewportHeight = viewportHeight * height / width; // Lets keep things in proportion.
-        camera.update();
+//        camera.viewportWidth = viewportWidth;                 // Viewport of 30 units!
+//        camera.viewportHeight = (viewportHeight * height / width); // Lets keep things in proportion.
+//        camera.update();
     }
 
     @Override
     public void show() {
-
+        Gdx.input.setCursorCatched(false);
     }
 
     @Override
