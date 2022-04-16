@@ -16,17 +16,22 @@ public class GameScreen implements Screen {
 
     final Game game;
 
+    OrthographicCamera camera;
+    Vector3 touchPos = new Vector3();
 
     Texture playerTexture;
     Texture sandTile;
     Texture testTile;
     Texture rockTile;
-    OrthographicCamera camera;
+    Texture menuBackground;
+
     Rectangle player;
+    Rectangle menuHud;
+    Rectangle menuHudOption1;
+    Rectangle menuHudOption2;
     Array<Rectangle> sandTiles;
     Array<Rectangle> rockTiles;
-    Array<Rectangle> playerCollision;
-    Vector3 touchPos = new Vector3();
+
     static final int WORLD_WIDTH = 5000;
     static final int WORLD_HEIGHT = 5000;
     static float viewportWidth = 960;
@@ -38,6 +43,10 @@ public class GameScreen implements Screen {
     int coolandepiccounter = 0;
     int[] rocksX = new int[]{2, 3, 4, 5, 6};
     int[] rocksY = new int[]{1, 3, 4, 5, 6};
+    float screenWidth = Gdx.graphics.getWidth();
+    float screenHeight = Gdx.graphics.getHeight();
+
+    boolean menuOpen = false;
 
     public GameScreen(final Game game) {
         this.game = game;
@@ -46,28 +55,21 @@ public class GameScreen implements Screen {
         sandTile = new Texture(Gdx.files.internal("sand.png"));
         testTile = new Texture(Gdx.files.internal("test.png"));
         rockTile = new Texture(Gdx.files.internal("rock.png"));
-        float w = Gdx.graphics.getWidth();
-        float h = Gdx.graphics.getHeight();
+        menuBackground = new Texture(Gdx.files.internal("menu_background.png"));
 
-        camera = new OrthographicCamera(viewportWidth, viewportHeight * (h / w));
-        camera.setToOrtho(false, viewportWidth, viewportHeight * (h / w));
+        camera = new OrthographicCamera(viewportWidth, viewportHeight * (screenHeight / screenWidth));
+        camera.setToOrtho(false, viewportWidth, viewportHeight * (screenHeight / screenWidth));
         camera.position.set(-500, -500, 0);
         camera.zoom = .7f;
         camera.update();
 
-        player = new Rectangle();
-        player.x = -500;
-        player.y = -500;
-        player.width = 64;
-        player.height = 64;
-
+        player = new Rectangle(Config.playerX, Config.playerY, 64, 64);
+        menuHud = new Rectangle(25, 400, 200, 100);
+        menuHudOption1 = new Rectangle(menuHud.x + 10, menuHud.y + 55, menuHud.width - 20, menuHud.height - 65);
     }
 
 
     private void handleInput() {
-        playerCollision = new Array<Rectangle>();
-        spawnPlayers();
-        //TODO make this work
         cameraOffsetX = (camera.position.x - playerCameraOffsetX);
         cameraOffsetY = (camera.position.y - playerCameraOffsetY);
         if (Gdx.input.isKeyJustPressed(Input.Keys.A)) {
@@ -102,6 +104,15 @@ public class GameScreen implements Screen {
         System.out.println();
         System.out.println(player.x - (camera.position.x - playerCameraOffsetX));
 
+        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
+            menuOpen = !menuOpen;
+            save();
+        }
+
+        if (Gdx.input.isTouched() && menuOpen && Game.pointer.overlaps(menuHudOption1)) {
+            save();
+            game.setScreen(new MainMenuScreen(game));
+        }
 
         player.x = MathUtils.clamp(player.x, 0, WORLD_WIDTH - 96);
         player.y = MathUtils.clamp(player.y, 128, WORLD_HEIGHT - 192);
@@ -143,6 +154,11 @@ public class GameScreen implements Screen {
         }
         game.font.draw(game.batch, "clown", 100, 200);
         game.batch.draw(playerTexture, player.x, player.y, player.width, player.height);
+        if (menuOpen) {
+            game.batch.draw(menuBackground, menuHud.x, menuHud.y, menuHud.width, menuHud.height);
+            game.batch.draw(game.blackTransparent, menuHudOption1.x, menuHudOption1.y, menuHudOption1.width, menuHudOption1.height);
+            game.font.draw(game.batch, "Main menu?", menuHudOption1.x, menuHudOption1.y + menuHudOption1.height);
+        }
 
         if (Config.usePointer) {
             game.batch.draw(game.cursor, Game.pointer.x, Game.pointer.y, Game.pointer.width, Game.pointer.height);
@@ -211,30 +227,9 @@ public class GameScreen implements Screen {
         }
     }
 
-    private void spawnPlayers() {
-        for (int i = 0; i < 4; i++) {
-            Rectangle playerCollisionRec = new Rectangle();
-            switch (i) {
-                case 0 -> {
-                    playerCollisionRec.x = player.x;
-                    playerCollisionRec.y = player.y - 64;
-                }
-                case 1 -> {
-                    playerCollisionRec.x = player.x + 64;
-                    playerCollisionRec.y = player.y;
-                }
-                case 2 -> {
-                    playerCollisionRec.x = player.x - 64;
-                    playerCollisionRec.y = player.y;
-                }
-                case 3 -> {
-                    playerCollisionRec.x = player.x;
-                    playerCollisionRec.y = player.y + 64;
-                }
-            }
-            playerCollisionRec.width = 64;
-            playerCollisionRec.height = 64;
-            playerCollision.add(playerCollisionRec);
-        }
+    private void save() {
+        Config.playerX = player.x;
+        Config.playerY = player.y;
+        Config.writeConfig();
     }
 }

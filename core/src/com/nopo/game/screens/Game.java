@@ -19,6 +19,7 @@ public class Game extends com.badlogic.gdx.Game {
     public BitmapFont font;
     public Texture cursor;
     public Texture black;
+    public Texture blackTransparent;
     static long lastCatched = -1;
     static Rectangle pointer;
 
@@ -41,6 +42,7 @@ public class Game extends com.badlogic.gdx.Game {
 
         cursor = new Texture(Gdx.files.internal("pointer.png"));
         black = new Texture(Gdx.files.internal("black.png"));
+        blackTransparent = new Texture(Gdx.files.internal("trans_black.png"));
         pointer = new Rectangle(-10, -10, 32, 32);
 
 
@@ -65,7 +67,7 @@ public class Game extends com.badlogic.gdx.Game {
     public static void cursorPos(Rectangle pointer, Vector3 touchPos) {
         pointer.x = touchPos.x - 15;
         pointer.y = touchPos.y - 15;
-        if ((pointer.x > 800 || pointer.y > 480 || pointer.x < 0 || pointer.y < 0) || (Gdx.input.isKeyPressed(Input.Keys.ALT_LEFT))) {
+        if ((pointer.x > 800 || pointer.y > 490 || pointer.x < -20 || pointer.y < -15) || (Gdx.input.isKeyPressed(Input.Keys.ALT_LEFT))) {
             Gdx.input.setCursorCatched(false);
         } else if (TimeUtils.millis() - lastCatched > 3000 || lastCatched == -1) {
             if (Config.usePointer) {
