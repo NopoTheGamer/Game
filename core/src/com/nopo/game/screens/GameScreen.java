@@ -11,6 +11,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.nopo.game.Config;
+import com.nopo.game.NPC;
 import com.nopo.game.Utils;
 
 public class GameScreen implements Screen {
@@ -56,6 +57,7 @@ public class GameScreen implements Screen {
 
     String debugX = "";
     String debugY = "";
+    NPC npc = new NPC("Test", 3, 3);
 
     public GameScreen(final Game game) {
         this.game = game;
@@ -151,7 +153,7 @@ public class GameScreen implements Screen {
     public void render(float delta) {
         rockTiles = new Array<Rectangle>();
         sandTiles = new Array<Rectangle>();
-        spawnRocks(new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10, 10}, new int[]{6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 5, 4, 3, 2});
+        spawnRocks(new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10, 10, 10, 10, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21}, new int[]{6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 5, 4, 7, 8, 9, 10, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11});
         spawnSand();
 
         handleInput();
@@ -180,6 +182,8 @@ public class GameScreen implements Screen {
         }
         game.font30.draw(game.batch, "clown", 100, 200);
         game.batch.draw(playerTexture, player.x, player.y, player.width, player.height);
+        game.batch.draw(playerTexture, getXAsCoords(npc.x), getYAsCoords(npc.y), 64, 64);
+        game.batch.draw(menuBackground, (camera.position.x - leftMostCamera) + 25, (camera.position.y - bottomMostCamera) + 140, (960 * .7f) - 50 /*622f*/, 50);
         if (menuOpen) {
             menuHud.x = (camera.position.x - leftMostCamera) + 25;
             menuHud.y = (camera.position.y - bottomMostCamera) + 400;
