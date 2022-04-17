@@ -11,6 +11,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.nopo.game.Config;
+import com.nopo.game.Utils;
 
 public class GameScreen implements Screen {
 
@@ -32,8 +33,11 @@ public class GameScreen implements Screen {
     Array<Rectangle> sandTiles;
     Array<Rectangle> rockTiles;
 
-    LastDirection lastDirection = LastDirection.DOWN;
+    enum LastDirection {
+        LEFT, RIGHT, UP, DOWN
+    }
 
+    LastDirection lastDirection = LastDirection.DOWN;
     static final int WORLD_WIDTH = 5000;
     static final int WORLD_HEIGHT = 5000;
     static float viewportWidth = 960;
@@ -42,12 +46,16 @@ public class GameScreen implements Screen {
     final int playerCameraOffsetY = 176;
     float cameraOffsetX;
     float cameraOffsetY;
-    int[] rocksX = new int[]{5};
-    int[] rocksY = new int[]{5};
+    float leftMostCamera = 336;
+    float bottomMostCamera = 330;
     float screenWidth = Gdx.graphics.getWidth();
+
     float screenHeight = Gdx.graphics.getHeight();
 
     boolean menuOpen = false;
+
+    String debugX = "";
+    String debugY = "";
 
     public GameScreen(final Game game) {
         this.game = game;
@@ -60,13 +68,13 @@ public class GameScreen implements Screen {
 
         camera = new OrthographicCamera(viewportWidth, viewportHeight * (screenHeight / screenWidth));
         camera.setToOrtho(false, viewportWidth, viewportHeight * (screenHeight / screenWidth));
-        camera.position.set(-500, -500, 0);
+        camera.position.set(Config.cameraX, Config.cameraY, 0);
         camera.zoom = .7f;
         camera.update();
 
-        player = new Rectangle((float) getXGrid(Config.playerX), (float) getYGrid(Config.playerY), 64, 64);
+        player = new Rectangle((float) getXAsCoords(Config.playerX), (float) getYAsCoords(Config.playerY), 64, 64);
         menuHud = new Rectangle(25, 400, 200, 100);
-        menuHudOption1 = new Rectangle(menuHud.x + 10, menuHud.y + 55, menuHud.width - 20, menuHud.height - 65);
+        menuHudOption1 = new Rectangle(10, 55, menuHud.width - 20, menuHud.height - 65);
     }
 
 
@@ -77,29 +85,34 @@ public class GameScreen implements Screen {
             if (player.x - (int) cameraOffsetX <= 64) {
                 camera.translate(-64, 0, 0);
             }
-            player.x -= 64;
+            changePos(-1, 0);
             lastDirection = LastDirection.LEFT;
         }
         if (Gdx.input.isKeyJustPressed(Input.Keys.D)) {
             if (player.x - (int) cameraOffsetX >= 448) {
                 camera.translate(64, 0, 0);
             }
-            player.x += 64;
+            changePos(1, 0);
             lastDirection = LastDirection.RIGHT;
         }
         if (Gdx.input.isKeyJustPressed(Input.Keys.S)) {
             if (player.y - (int) cameraOffsetY <= 64) {
                 camera.translate(0, -64, 0);
             }
-            player.y -= 64;
+            changePos(0, -1);
             lastDirection = LastDirection.DOWN;
         }
         if (Gdx.input.isKeyJustPressed(Input.Keys.W)) {
             if (player.y - (int) cameraOffsetY >= 256) {
                 camera.translate(0, 64, 0);
             }
-            player.y += 64;
+            changePos(0, 1);
             lastDirection = LastDirection.UP;
+        }
+
+        if (Gdx.input.isKeyJustPressed(Input.Keys.CONTROL_LEFT)) {
+            debugX += getXAsGrid() + ", ";
+            debugY += getYAsGrid() + ", ";
         }
 
         collisionWithRectangleArray(rockTiles);
@@ -115,6 +128,12 @@ public class GameScreen implements Screen {
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
             menuOpen = !menuOpen;
             save();
+            if (!Utils.isEmpty(debugX)) {
+                System.out.println("x: {" + Utils.removeEnd(debugX, ", ") + "}");
+                System.out.println("y: {" + Utils.removeEnd(debugY, ", ") + "}");
+            }
+            debugX = "";
+            debugY = "";
         }
 
         if (Gdx.input.isTouched() && menuOpen && Game.pointer.overlaps(menuHudOption1)) {
@@ -134,7 +153,7 @@ public class GameScreen implements Screen {
     public void render(float delta) {
         rockTiles = new Array<Rectangle>();
         sandTiles = new Array<Rectangle>();
-        spawnRocks();
+        spawnRocks(new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10, 10, 10}, new int[]{6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 5, 4, 3, 2, 1});
         spawnSand();
 
         handleInput();
@@ -149,10 +168,10 @@ public class GameScreen implements Screen {
         game.batch.setProjectionMatrix(camera.combined);
         game.batch.begin();
 
-        int coolandepiccounter = 0;
+        int i = 0;
         for (Rectangle sand : sandTiles) {
-            coolandepiccounter++;
-            if (coolandepiccounter % 2 == 0) {
+            i++;
+            if (i % 2 == 0) {
                 game.batch.draw(sandTile, sand.x, sand.y, sand.width, sand.height);
             } else {
                 game.batch.draw(testTile, sand.x, sand.y, sand.width, sand.height);
@@ -164,6 +183,10 @@ public class GameScreen implements Screen {
         game.font.draw(game.batch, "clown", 100, 200);
         game.batch.draw(playerTexture, player.x, player.y, player.width, player.height);
         if (menuOpen) {
+            menuHud.x = (camera.position.x - leftMostCamera) + 25;
+            menuHud.y = (camera.position.y - bottomMostCamera) + 400;
+            menuHudOption1.x = menuHud.x + 10;
+            menuHudOption1.y = menuHud.y + 55;
             game.batch.draw(menuBackground, menuHud.x, menuHud.y, menuHud.width, menuHud.height);
             game.batch.draw(game.blackTransparent, menuHudOption1.x, menuHudOption1.y, menuHudOption1.width, menuHudOption1.height);
             game.font.draw(game.batch, "Main menu?", menuHudOption1.x, menuHudOption1.y + menuHudOption1.height);
@@ -217,12 +240,12 @@ public class GameScreen implements Screen {
         }
     }
 
-    private void spawnRocks() {
-        if (rocksY.length == rocksX.length) {
-            for (int i = 0; i < rocksX.length; i++) {
+    private void spawnRocks(int[] rockPositionsX, int[] rockPositionsY) {
+        if (rockPositionsX.length == rockPositionsY.length) {
+            for (int i = 0; i < rockPositionsX.length; i++) {
                 Rectangle rock = new Rectangle();
-                rock.x = getXGrid(rocksX[i]);
-                rock.y = getYGrid(rocksY[i]);
+                rock.x = getXAsCoords(rockPositionsX[i]);
+                rock.y = getYAsCoords(rockPositionsY[i]);
                 rock.width = 64;
                 rock.height = 64;
                 rockTiles.add(rock);
@@ -232,16 +255,16 @@ public class GameScreen implements Screen {
         }
         for (int i = 0; i < WORLD_WIDTH; i++) {
             Rectangle rock = new Rectangle();
-            rock.x = getXGrid(i);
-            rock.y = getYGrid(0);
+            rock.x = getXAsCoords(i);
+            rock.y = getYAsCoords(0);
             rock.width = 64;
             rock.height = 64;
             rockTiles.add(rock);
         }
         for (int i = 0; i < WORLD_HEIGHT; i++) {
             Rectangle rock = new Rectangle();
-            rock.x = getXGrid(0);
-            rock.y = getYGrid(i);
+            rock.x = getXAsCoords(0);
+            rock.y = getYAsCoords(i);
             rock.width = 64;
             rock.height = 64;
             rockTiles.add(rock);
@@ -249,36 +272,47 @@ public class GameScreen implements Screen {
     }
 
     private void save() {
-        Config.playerX = (int) player.x / 64;
-        Config.playerY = (int) (player.y / 64) - 2;
+        Config.playerX = getXAsGrid();
+        Config.playerY = getYAsGrid();
+        Config.cameraX = camera.position.x;
+        Config.cameraY = camera.position.y;
         Config.writeConfig();
-    }
-
-    enum LastDirection {
-        LEFT, RIGHT, UP, DOWN
     }
 
     private void collisionWithRectangleArray(Array<Rectangle> rectArray) {
         for (Rectangle recs : rectArray) {
             if (player.overlaps(recs)) {
                 if (lastDirection == LastDirection.LEFT) {
-                    player.x += 64;
+                    changePos(1, 0);
                 } else if (lastDirection == LastDirection.RIGHT) {
-                    player.x -= 64;
+                    changePos(-1, 0);
                 } else if (lastDirection == LastDirection.UP) {
-                    player.y -= 64;
+                    changePos(0, -1);
                 } else if (lastDirection == LastDirection.DOWN) {
-                    player.y += 64;
+                    changePos(0, 1);
                 }
             }
         }
     }
 
-    private int getXGrid(int x) {
+    private int getXAsCoords(int x) {
         return x * 64;
     }
 
-    private int getYGrid(int y) {
+    private int getYAsCoords(int y) {
         return (y + 2) * 64;
+    }
+
+    private void changePos(int x, int y) {
+        player.x += x * 64;
+        player.y += y * 64;
+    }
+
+    private int getXAsGrid() {
+        return (int) player.x / 64;
+    }
+
+    private int getYAsGrid() {
+        return (int) (player.y / 64) - 2;
     }
 }
