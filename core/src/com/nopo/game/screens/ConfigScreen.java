@@ -6,7 +6,6 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.nopo.game.Config;
 
@@ -57,8 +56,8 @@ public class ConfigScreen implements Screen {
         game.batch.draw(game.black, backButton.x, backButton.y, backButton.width, backButton.height);
         game.batch.draw(game.black, cursorButton.x, cursorButton.y, cursorButton.width, cursorButton.height);
         // Text
-        game.font.draw(game.batch, "Config", 350, 450);
-        game.font.draw(game.batch, "Use custom cursor?", cursorButton.x, cursorButton.y + cursorButton.height);
+        game.font30.draw(game.batch, "Config", 350, 450);
+        game.font30.draw(game.batch, "Use custom cursor?", cursorButton.x, cursorButton.y + cursorButton.height);
         // Cursor
         if (Config.usePointer) {
             game.batch.draw(game.cursor, Game.pointer.x, Game.pointer.y, Game.pointer.width, Game.pointer.height);

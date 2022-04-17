@@ -116,9 +116,9 @@ public class DropGame implements Screen {
         for (Rectangle sand : sandTiles) {
             game.batch.draw(sandTile, sand.x, sand.y, sand.width, sand.height);
         }
-        game.font.draw(game.batch, "Score: " + dropsGathered, 0, 480);
+        game.font30.draw(game.batch, "Score: " + dropsGathered, 0, 480);
         if (bozo) {
-            game.font.draw(game.batch, "clown", 100, 200);
+            game.font30.draw(game.batch, "clown", 100, 200);
         }
         game.batch.draw(playerTexture, player.x, player.y, player.width, player.height);
 

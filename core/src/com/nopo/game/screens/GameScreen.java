@@ -117,14 +117,6 @@ public class GameScreen implements Screen {
 
         collisionWithRectangleArray(rockTiles);
 
-//        System.out.println("player x: " + player.x);
-//        System.out.println("camera x: " + (camera.position.x - playerCameraOffsetX));
-//        System.out.println(cameraOffsetX);
-//        System.out.println("player y: " + player.y);
-//        System.out.println("camera y: " + (camera.position.y - playerCameraOffsetY));
-//        System.out.println();
-//        System.out.println(player.x - (camera.position.x - playerCameraOffsetX));
-
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
             menuOpen = !menuOpen;
             save();
@@ -153,7 +145,7 @@ public class GameScreen implements Screen {
     public void render(float delta) {
         rockTiles = new Array<Rectangle>();
         sandTiles = new Array<Rectangle>();
-        spawnRocks(new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10, 10, 10}, new int[]{6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 5, 4, 3, 2, 1});
+        spawnRocks(new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10, 10}, new int[]{6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 5, 4, 3, 2});
         spawnSand();
 
         handleInput();
@@ -180,7 +172,7 @@ public class GameScreen implements Screen {
         for (Rectangle rock : rockTiles) {
             game.batch.draw(rockTile, rock.x, rock.y, rock.width, rock.height);
         }
-        game.font.draw(game.batch, "clown", 100, 200);
+        game.font30.draw(game.batch, "clown", 100, 200);
         game.batch.draw(playerTexture, player.x, player.y, player.width, player.height);
         if (menuOpen) {
             menuHud.x = (camera.position.x - leftMostCamera) + 25;
@@ -189,7 +181,7 @@ public class GameScreen implements Screen {
             menuHudOption1.y = menuHud.y + 55;
             game.batch.draw(menuBackground, menuHud.x, menuHud.y, menuHud.width, menuHud.height);
             game.batch.draw(game.blackTransparent, menuHudOption1.x, menuHudOption1.y, menuHudOption1.width, menuHudOption1.height);
-            game.font.draw(game.batch, "Main menu?", menuHudOption1.x, menuHudOption1.y + menuHudOption1.height);
+            game.font23.draw(game.batch, "Main menu?", menuHudOption1.x, menuHudOption1.y + menuHudOption1.height);
         }
 
         if (Config.usePointer) {

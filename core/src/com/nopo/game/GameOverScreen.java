@@ -30,8 +30,8 @@ public class GameOverScreen implements Screen {
         game.batch.setProjectionMatrix(camera.combined);
 
         game.batch.begin();
-        game.font.draw(game.batch, "You fucking suck\n you died", 250, 250);
-        game.font.draw(game.batch, "Click to replay", 250, 210);
+        game.font30.draw(game.batch, "You fucking suck\n you died", 250, 250);
+        game.font30.draw(game.batch, "Click to replay", 250, 210);
         game.batch.end();
 
         if (Gdx.input.isTouched()) {

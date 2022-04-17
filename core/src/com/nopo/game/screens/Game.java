@@ -16,7 +16,8 @@ import com.nopo.game.Config;
 public class Game extends com.badlogic.gdx.Game {
 
     public SpriteBatch batch;
-    public BitmapFont font;
+    public BitmapFont font30;
+    public BitmapFont font23;
     public Texture cursor;
     public Texture black;
     public Texture blackTransparent;
@@ -36,7 +37,11 @@ public class Game extends com.badlogic.gdx.Game {
         parameter.shadowOffsetX = 3;
         parameter.shadowOffsetY = 3;
         parameter.shadowColor = new Color(0, 0, 0, 1);
-        font = generator.generateFont(parameter);
+        font30 = generator.generateFont(parameter);
+        parameter.size = 23;
+        parameter.shadowOffsetX = 1;
+        parameter.shadowOffsetY = 1;
+        font23 = generator.generateFont(parameter);
         generator.dispose();
 
 
@@ -55,7 +60,7 @@ public class Game extends com.badlogic.gdx.Game {
 
     public void dispose() {
         batch.dispose();
-        font.dispose();
+        font30.dispose();
     }
 
     /** Sets cursor position to the current mouse position
