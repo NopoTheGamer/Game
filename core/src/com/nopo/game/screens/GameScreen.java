@@ -32,6 +32,8 @@ public class GameScreen implements Screen {
     Array<Rectangle> sandTiles;
     Array<Rectangle> rockTiles;
 
+    LastDirection lastDirection = LastDirection.DOWN;
+
     static final int WORLD_WIDTH = 5000;
     static final int WORLD_HEIGHT = 5000;
     static float viewportWidth = 960;
@@ -40,9 +42,8 @@ public class GameScreen implements Screen {
     final int playerCameraOffsetY = 176;
     float cameraOffsetX;
     float cameraOffsetY;
-    int coolandepiccounter = 0;
-    int[] rocksX = new int[]{2, 3, 4, 5, 6};
-    int[] rocksY = new int[]{1, 3, 4, 5, 6};
+    int[] rocksX = new int[]{6};
+    int[] rocksY = new int[]{6};
     float screenWidth = Gdx.graphics.getWidth();
     float screenHeight = Gdx.graphics.getHeight();
 
@@ -77,25 +78,32 @@ public class GameScreen implements Screen {
                 camera.translate(-64, 0, 0);
             }
             player.x -= 64;
+            lastDirection = LastDirection.LEFT;
         }
         if (Gdx.input.isKeyJustPressed(Input.Keys.D)) {
             if (player.x - (int) cameraOffsetX >= 448) {
                 camera.translate(64, 0, 0);
             }
             player.x += 64;
+            lastDirection = LastDirection.RIGHT;
         }
         if (Gdx.input.isKeyJustPressed(Input.Keys.S)) {
             if (player.y - (int) cameraOffsetY <= 64) {
                 camera.translate(0, -64, 0);
             }
             player.y -= 64;
+            lastDirection = LastDirection.DOWN;
         }
         if (Gdx.input.isKeyJustPressed(Input.Keys.W)) {
             if (player.y - (int) cameraOffsetY >= 256) {
                 camera.translate(0, 64, 0);
             }
             player.y += 64;
+            lastDirection = LastDirection.UP;
         }
+
+        collisionWithRectangleArray(rockTiles);
+
         System.out.println("player x: " + player.x);
         System.out.println("camera x: " + (camera.position.x - playerCameraOffsetX));
         System.out.println(cameraOffsetX);
@@ -124,23 +132,24 @@ public class GameScreen implements Screen {
 
     @Override
     public void render(float delta) {
+        rockTiles = new Array<Rectangle>();
+        sandTiles = new Array<Rectangle>();
+        spawnRocks();
+        spawnSand();
+
         handleInput();
         Game.setUpTouchPos(touchPos, camera);
-        // used to clear the screen.
-        ScreenUtils.clear(0, 0, 0, 1);
+
+        ScreenUtils.clear(0, 0, 0, 1); // used to clear the screen.
 
         Game.cursorPos(Game.pointer, touchPos);
 
         camera.update();
-        // tell the SpriteBatch to render in the
-        // coordinate system specified by the camera.
+
         game.batch.setProjectionMatrix(camera.combined);
         game.batch.begin();
-        sandTiles = new Array<Rectangle>();
-        spawnSand();
-        rockTiles = new Array<Rectangle>();
-        spawnRocks();
-        coolandepiccounter = 0;
+
+        int coolandepiccounter = 0;
         for (Rectangle sand : sandTiles) {
             coolandepiccounter++;
             if (coolandepiccounter % 2 == 0) {
@@ -196,7 +205,6 @@ public class GameScreen implements Screen {
     @Override
     public void dispose() {
         sandTile.dispose();
-
     }
 
     private void spawnSand() {
@@ -225,11 +233,32 @@ public class GameScreen implements Screen {
         } else {
             throw new RuntimeException("Rocks X and Y arrays are not the same length!");
         }
+
     }
 
     private void save() {
         Config.playerX = player.x;
         Config.playerY = player.y;
         Config.writeConfig();
+    }
+
+    enum LastDirection {
+        LEFT, RIGHT, UP, DOWN
+    }
+
+    private void collisionWithRectangleArray(Array<Rectangle> rectArray) {
+        for (Rectangle recs : rectArray) {
+            if (player.overlaps(recs)) {
+                if (lastDirection == LastDirection.LEFT) {
+                    player.x += 64;
+                } else if (lastDirection == LastDirection.RIGHT) {
+                    player.x -= 64;
+                } else if (lastDirection == LastDirection.UP) {
+                    player.y -= 64;
+                } else if (lastDirection == LastDirection.DOWN) {
+                    player.y += 64;
+                }
+            }
+        }
     }
 }
