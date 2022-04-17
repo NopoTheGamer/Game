@@ -2,12 +2,11 @@ package com.nopo.game;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
-import com.badlogic.gdx.utils.Json;
 
 public class Config {
     public static boolean usePointer = true;
-    public static float playerX = -500;
-    public static float playerY = -500;
+    public static int playerX = 1;
+    public static int playerY = 1;
     static FileHandle configFile = Gdx.files.external("epicnopogame/save.json");
 
     // look i know this code is full on doggers but its funny and it works
@@ -25,8 +24,8 @@ public class Config {
         if (configFile.exists()) {
             String configAsString = configFile.readString();
             if (hasConfigOption(configAsString, 2)) usePointer = configBoolean(configAsString, 2);
-            if (hasConfigOption(configAsString, 3)) playerX = configFloat(configAsString, 3);
-            if (hasConfigOption(configAsString, 4)) playerY = configFloat(configAsString, 4);
+            if (hasConfigOption(configAsString, 3)) playerX = configInt(configAsString, 3);
+            if (hasConfigOption(configAsString, 4)) playerY = configInt(configAsString, 4);
             //if (hasConfigOption(configAsString, 5)) configOption4 = configInt(configAsString, 5);
         } else {
             System.out.println("https://cdn.discordapp.com/attachments/702456294874808330/964859861370302514/attachment.png");

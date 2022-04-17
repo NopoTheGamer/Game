@@ -42,8 +42,8 @@ public class GameScreen implements Screen {
     final int playerCameraOffsetY = 176;
     float cameraOffsetX;
     float cameraOffsetY;
-    int[] rocksX = new int[]{6};
-    int[] rocksY = new int[]{6};
+    int[] rocksX = new int[]{5};
+    int[] rocksY = new int[]{5};
     float screenWidth = Gdx.graphics.getWidth();
     float screenHeight = Gdx.graphics.getHeight();
 
@@ -64,7 +64,7 @@ public class GameScreen implements Screen {
         camera.zoom = .7f;
         camera.update();
 
-        player = new Rectangle(Config.playerX, Config.playerY, 64, 64);
+        player = new Rectangle((float) getXGrid(Config.playerX), (float) getYGrid(Config.playerY), 64, 64);
         menuHud = new Rectangle(25, 400, 200, 100);
         menuHudOption1 = new Rectangle(menuHud.x + 10, menuHud.y + 55, menuHud.width - 20, menuHud.height - 65);
     }
@@ -177,9 +177,6 @@ public class GameScreen implements Screen {
 
     @Override
     public void resize(int width, int height) {
-//        camera.viewportWidth = viewportWidth;                 // Viewport of 30 units!
-//        camera.viewportHeight = (viewportHeight * height / width); // Lets keep things in proportion.
-//        camera.update();
     }
 
     @Override
@@ -224,8 +221,8 @@ public class GameScreen implements Screen {
         if (rocksY.length == rocksX.length) {
             for (int i = 0; i < rocksX.length; i++) {
                 Rectangle rock = new Rectangle();
-                rock.x = (rocksX[i] - 1) * 64;
-                rock.y = (rocksY[i] + 1) * 64;
+                rock.x = getXGrid(rocksX[i]);
+                rock.y = getYGrid(rocksY[i]);
                 rock.width = 64;
                 rock.height = 64;
                 rockTiles.add(rock);
@@ -235,16 +232,16 @@ public class GameScreen implements Screen {
         }
         for (int i = 0; i < WORLD_WIDTH; i++) {
             Rectangle rock = new Rectangle();
-            rock.x = i * 64;
-            rock.y = 64 * 2;
+            rock.x = getXGrid(i);
+            rock.y = getYGrid(0);
             rock.width = 64;
             rock.height = 64;
             rockTiles.add(rock);
         }
         for (int i = 0; i < WORLD_HEIGHT; i++) {
             Rectangle rock = new Rectangle();
-            rock.x = 0;
-            rock.y = i * 64;
+            rock.x = getXGrid(0);
+            rock.y = getYGrid(i);
             rock.width = 64;
             rock.height = 64;
             rockTiles.add(rock);
@@ -252,8 +249,8 @@ public class GameScreen implements Screen {
     }
 
     private void save() {
-        Config.playerX = player.x;
-        Config.playerY = player.y;
+        Config.playerX = (int) player.x / 64;
+        Config.playerY = (int) (player.y / 64) - 2;
         Config.writeConfig();
     }
 
@@ -275,5 +272,13 @@ public class GameScreen implements Screen {
                 }
             }
         }
+    }
+
+    private int getXGrid(int x) {
+        return x * 64;
+    }
+
+    private int getYGrid(int y) {
+        return (y + 2) * 64;
     }
 }
