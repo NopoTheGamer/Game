@@ -104,13 +104,13 @@ public class GameScreen implements Screen {
 
         collisionWithRectangleArray(rockTiles);
 
-        System.out.println("player x: " + player.x);
-        System.out.println("camera x: " + (camera.position.x - playerCameraOffsetX));
-        System.out.println(cameraOffsetX);
-        System.out.println("player y: " + player.y);
-        System.out.println("camera y: " + (camera.position.y - playerCameraOffsetY));
-        System.out.println();
-        System.out.println(player.x - (camera.position.x - playerCameraOffsetX));
+//        System.out.println("player x: " + player.x);
+//        System.out.println("camera x: " + (camera.position.x - playerCameraOffsetX));
+//        System.out.println(cameraOffsetX);
+//        System.out.println("player y: " + player.y);
+//        System.out.println("camera y: " + (camera.position.y - playerCameraOffsetY));
+//        System.out.println();
+//        System.out.println(player.x - (camera.position.x - playerCameraOffsetX));
 
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
             menuOpen = !menuOpen;
@@ -122,7 +122,7 @@ public class GameScreen implements Screen {
             game.setScreen(new MainMenuScreen(game));
         }
 
-        player.x = MathUtils.clamp(player.x, 0, WORLD_WIDTH - 96);
+        player.x = MathUtils.clamp(player.x, 64, WORLD_WIDTH - 96);
         player.y = MathUtils.clamp(player.y, 128, WORLD_HEIGHT - 192);
         camera.position.x = MathUtils.clamp(camera.position.x, (viewportWidth * camera.zoom) / 2f, WORLD_WIDTH - (viewportWidth * camera.zoom) / 2f);
         camera.position.y = MathUtils.clamp(camera.position.y, ((viewportHeight * camera.zoom) / 2f) - 6, WORLD_HEIGHT - (viewportHeight * camera.zoom) / 2f);
@@ -233,7 +233,22 @@ public class GameScreen implements Screen {
         } else {
             throw new RuntimeException("Rocks X and Y arrays are not the same length!");
         }
-
+        for (int i = 0; i < WORLD_WIDTH; i++) {
+            Rectangle rock = new Rectangle();
+            rock.x = i * 64;
+            rock.y = 64 * 2;
+            rock.width = 64;
+            rock.height = 64;
+            rockTiles.add(rock);
+        }
+        for (int i = 0; i < WORLD_HEIGHT; i++) {
+            Rectangle rock = new Rectangle();
+            rock.x = 0;
+            rock.y = i * 64;
+            rock.width = 64;
+            rock.height = 64;
+            rockTiles.add(rock);
+        }
     }
 
     private void save() {
