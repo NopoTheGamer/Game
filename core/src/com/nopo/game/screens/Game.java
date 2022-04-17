@@ -24,6 +24,14 @@ public class Game extends com.badlogic.gdx.Game {
     static long lastCatched = -1;
     static Rectangle pointer;
 
+    enum LastScreen {
+        MAIN_MENU,
+        GAME,
+        CONFIG
+    }
+
+    public static LastScreen lastScreen = LastScreen.MAIN_MENU;
+
     public void create() {
         batch = new SpriteBatch();
         Config.loadConfig();

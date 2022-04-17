@@ -65,7 +65,11 @@ public class ConfigScreen implements Screen {
         game.batch.end();
 
         if (Gdx.input.isTouched() && backButton.overlaps(Game.pointer)) {
-            game.setScreen(new MainMenuScreen(game));
+            switch (Game.lastScreen) {
+                case MAIN_MENU -> game.setScreen(new MainMenuScreen(game));
+                case GAME -> game.setScreen(new GameScreen(game));
+            }
+            Game.lastScreen = Game.LastScreen.CONFIG;
             dispose();
         } else if (Gdx.input.justTouched() && cursorButton.overlaps(Game.pointer)) {
             Config.usePointer = !Config.usePointer;

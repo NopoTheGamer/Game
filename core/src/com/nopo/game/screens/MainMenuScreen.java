@@ -73,11 +73,12 @@ public class MainMenuScreen implements Screen {
             System.out.println("--------------------------------");
         }
 
-
         if (Gdx.input.isTouched() && newGameRec.overlaps(Game.pointer) && !devKey) {
+            Game.lastScreen = Game.LastScreen.MAIN_MENU;
             game.setScreen(new GameScreen(game));
             dispose();
         } else if (Gdx.input.isTouched() && configRec.overlaps(Game.pointer) && !devKey) {
+            Game.lastScreen = Game.LastScreen.MAIN_MENU;
             game.setScreen(new ConfigScreen(game));
         }
     }

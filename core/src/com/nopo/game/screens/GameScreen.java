@@ -74,7 +74,8 @@ public class GameScreen implements Screen {
 
         player = new Rectangle((float) getXAsCoords(Config.playerX), (float) getYAsCoords(Config.playerY), 64, 64);
         menuHud = new Rectangle(25, 400, 200, 100);
-        menuHudOption1 = new Rectangle(10, 55, menuHud.width - 20, menuHud.height - 65);
+        menuHudOption1 = new Rectangle(10, 55, menuHud.width - 40, menuHud.height - 77);
+        menuHudOption2 = new Rectangle(10, 55, menuHud.width - 40, menuHud.height - 77);
     }
 
 
@@ -128,8 +129,13 @@ public class GameScreen implements Screen {
             debugY = "";
         }
 
-        if (Gdx.input.isTouched() && menuOpen && Game.pointer.overlaps(menuHudOption1)) {
+        if (Gdx.input.isTouched() && menuOpen && Game.pointer.overlaps(menuHudOption2)) {
             save();
+            Game.lastScreen = Game.LastScreen.GAME;
+            game.setScreen(new ConfigScreen(game));
+        } else if (Gdx.input.isTouched() && menuOpen && Game.pointer.overlaps(menuHudOption1)) {
+            save();
+            Game.lastScreen = Game.LastScreen.GAME;
             game.setScreen(new MainMenuScreen(game));
         }
 
@@ -178,10 +184,16 @@ public class GameScreen implements Screen {
             menuHud.x = (camera.position.x - leftMostCamera) + 25;
             menuHud.y = (camera.position.y - bottomMostCamera) + 400;
             menuHudOption1.x = menuHud.x + 10;
-            menuHudOption1.y = menuHud.y + 55;
+            menuHudOption1.y = menuHud.y + 70;
+            menuHudOption2.x = menuHud.x + 10;
+            menuHudOption2.y = menuHud.y + 45;
+
             game.batch.draw(menuBackground, menuHud.x, menuHud.y, menuHud.width, menuHud.height);
             game.batch.draw(game.blackTransparent, menuHudOption1.x, menuHudOption1.y, menuHudOption1.width, menuHudOption1.height);
-            game.font23.draw(game.batch, "Main menu?", menuHudOption1.x, menuHudOption1.y + menuHudOption1.height);
+            game.batch.draw(game.blackTransparent, menuHudOption2.x, menuHudOption2.y, menuHudOption2.width, menuHudOption2.height);
+
+            game.font23.draw(game.batch, "Save and quit", menuHudOption1.x, menuHudOption1.y + menuHudOption1.height);
+            game.font23.draw(game.batch, "Settings", menuHudOption2.x, menuHudOption2.y + menuHudOption2.height);
         }
 
         if (Config.usePointer) {
