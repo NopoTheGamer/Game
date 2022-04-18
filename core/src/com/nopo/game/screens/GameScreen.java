@@ -5,6 +5,8 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
@@ -29,6 +31,7 @@ public class GameScreen implements Screen {
     Texture menuBackground;
     Texture npcBackground;
     Texture rightArrow;
+    Texture teleporterSpriteMap;
 
     Rectangle player;
     Rectangle menuHud;
@@ -37,15 +40,22 @@ public class GameScreen implements Screen {
     Rectangle selectedOptionArrow;
     Array<Rectangle> sandTiles;
     Array<Rectangle> rockTiles;
+    Array<Rectangle> tpTiles;
+    Array<Rectangle> tpTiles2;
 
     NPC npc1 = new NPC("Balls in yo jaw", 3, 3, 1, 3);
     NPC npc2 = new NPC("sword dude", 10, 2, 3, 5);
+
+    TeleportTiles teleportTile = new TeleportTiles(1, 1, 9, 5);
+    TeleportTiles teleportTile2 = new TeleportTiles(16, 1, 27, 1);
+    TeleportTiles teleportTile3 = new TeleportTiles(29, 4, 37, 14);
 
     enum LastDirection {
         LEFT, RIGHT, UP, DOWN
     }
 
     LastDirection lastDirection = LastDirection.DOWN;
+
     static final int WORLD_WIDTH = 5000;
     static final int WORLD_HEIGHT = 5000;
     static float viewportWidth = 960;
@@ -56,9 +66,13 @@ public class GameScreen implements Screen {
     float cameraOffsetY;
     float leftMostCamera = 336;
     float bottomMostCamera = 330;
-    float screenWidth = Gdx.graphics.getWidth();
 
+    float screenWidth = Gdx.graphics.getWidth();
     float screenHeight = Gdx.graphics.getHeight();
+
+    float stateTime = 0f;
+    private static final int TELEPORTER_FRAMES = 4;
+    Animation<TextureRegion> teleportAnimation;
 
     boolean menuOpen = false;
 
@@ -75,6 +89,7 @@ public class GameScreen implements Screen {
         menuBackground = new Texture(Gdx.files.internal("menu_background.png"));
         npcBackground = new Texture(Gdx.files.internal("npc_background.png"));
         rightArrow = new Texture(Gdx.files.internal("right_arrow.png"));
+        teleporterSpriteMap = new Texture(Gdx.files.internal("teleporter.png"));
 
         camera = new OrthographicCamera(viewportWidth, viewportHeight * (screenHeight / screenWidth));
         camera.setToOrtho(false, viewportWidth, viewportHeight * (screenHeight / screenWidth));
@@ -87,10 +102,24 @@ public class GameScreen implements Screen {
         menuHudOption1 = new Rectangle(10, 55, menuHud.width - 40, menuHud.height - 77);
         menuHudOption2 = new Rectangle(10, 55, menuHud.width - 40, menuHud.height - 77);
         selectedOptionArrow = new Rectangle(menuHud.x - 15, menuHud.y + 74, 18, 17);
+
+        TextureRegion[][] tmp = TextureRegion.split(teleporterSpriteMap, teleporterSpriteMap.getWidth() / TELEPORTER_FRAMES, teleporterSpriteMap.getHeight() / TELEPORTER_FRAMES);
+
+        // Place the regions into a 1D array in the correct order, starting from the top
+        // left, going across first. The Animation constructor requires a 1D array.
+        TextureRegion[] walkFrames = new TextureRegion[TELEPORTER_FRAMES * TELEPORTER_FRAMES];
+        int index = 0;
+        for (int i = 0; i < TELEPORTER_FRAMES; i++) {
+            for (int j = 0; j < TELEPORTER_FRAMES; j++) {
+                walkFrames[index++] = tmp[i][j];
+                if (index > 12) break;
+            }
+        }
+        teleportAnimation = new Animation<TextureRegion>(0.025f, walkFrames);
     }
 
 
-    private void handleInput() {
+    private void handleInput(float delta) {
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
             menuOpen = !menuOpen;
             if (!Utils.isEmpty(debugX)) {
@@ -111,22 +140,19 @@ public class GameScreen implements Screen {
             }
             changePos(0, 1);
             lastDirection = LastDirection.UP;
-        }
-        if (Gdx.input.isKeyJustPressed(Input.Keys.A)) {
+        } else if (Gdx.input.isKeyJustPressed(Input.Keys.A)) {
             if (player.x - (int) cameraOffsetX <= 64) {
                 camera.translate(-64, 0, 0);
             }
             changePos(-1, 0);
             lastDirection = LastDirection.LEFT;
-        }
-        if (Gdx.input.isKeyJustPressed(Input.Keys.S)) {
+        } else if (Gdx.input.isKeyJustPressed(Input.Keys.S)) {
             if (player.y - (int) cameraOffsetY <= 64) {
                 camera.translate(0, -64, 0);
             }
             changePos(0, -1);
             lastDirection = LastDirection.DOWN;
-        }
-        if (Gdx.input.isKeyJustPressed(Input.Keys.D)) {
+        } else if (Gdx.input.isKeyJustPressed(Input.Keys.D)) {
             if (player.x - (int) cameraOffsetX >= 448) {
                 camera.translate(64, 0, 0);
             }
@@ -141,6 +167,19 @@ public class GameScreen implements Screen {
 
         collisionWithRectangleArray(rockTiles);
 
+
+        //System.out.println(player.y - cameraOffsetY + " " + camera.position.y);
+        //System.out.println(player.x - cameraOffsetX + " " + (player.y - cameraOffsetY));
+        if (player.x - cameraOffsetX < -32) {
+            camera.position.x -= 32 * (Utils.interp(Interpolation.exp10Out, delta) * 1.5);
+        } else if (player.x - cameraOffsetX > 544) {
+            camera.position.x += 32 * (Utils.interp(Interpolation.exp10Out, delta) * 1.5);
+        }
+        if (player.y - cameraOffsetY < -26) {
+            camera.position.y -= 32 * (Utils.interp(Interpolation.exp10Out, delta) * 1.5);
+        } else if (player.y - cameraOffsetY > 358) {
+            camera.position.y += 32 * (Utils.interp(Interpolation.exp10Out, delta) * 1.5);
+        }
         player.x = MathUtils.clamp(player.x, 64, WORLD_WIDTH - 96);
         player.y = MathUtils.clamp(player.y, 128, WORLD_HEIGHT - 192);
         camera.position.x = MathUtils.clamp(camera.position.x, (viewportWidth * camera.zoom) / 2f, WORLD_WIDTH - (viewportWidth * camera.zoom) / 2f);
@@ -152,10 +191,11 @@ public class GameScreen implements Screen {
         spawnRocks(new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10, 10, 10, 10, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21}, new int[]{6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 5, 4, 7, 8, 9, 10, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11});
         spawnSand();
 
-        handleInput();
+        handleInput(delta);
         Game.setUpTouchPos(touchPos, camera);
 
         ScreenUtils.clear(0, 0, 0, 1); // used to clear the screen.
+        stateTime += Gdx.graphics.getDeltaTime() / 2.5; // Accumulate elapsed animation time
 
         Game.cursorPos(Game.pointer, touchPos);
 
@@ -166,6 +206,10 @@ public class GameScreen implements Screen {
 
         drawSand();
         drawRock();
+
+        teleportTile(teleportTile);
+        teleportTile(teleportTile2);
+        teleportTile(teleportTile3);
 
         game.font30.draw(game.batch, "clown", 100, 200);
 
@@ -207,6 +251,7 @@ public class GameScreen implements Screen {
     @Override
     public void dispose() {
         sandTile.dispose();
+        teleporterSpriteMap.dispose();
     }
 
     private void spawnSand() {
@@ -357,7 +402,7 @@ public class GameScreen implements Screen {
         }
 //        if (selectedOption < 0) selectedOptionArrow.y = 449;
 //        if (selectedOption > 1) selectedOptionArrow.y = 474; // math clamp with wrap
-        selectedOptionArrow.y = Utils.clampWithWrap(selectedOptionArrow.y, 449, 474);
+        selectedOptionArrow.y = Utils.clampWithWrap(selectedOptionArrow.y, 449, 474); // I LOVE RANDOM ASS NUMBERS
 
         game.batch.draw(menuBackground, menuHud.x, menuHud.y, menuHud.width, menuHud.height);
         game.batch.draw(rightArrow, lockXHud(selectedOptionArrow.x + (Utils.interp(Interpolation.swing, delta) * 6)), lockYHud(selectedOptionArrow.y), 18, 17);
@@ -389,6 +434,64 @@ public class GameScreen implements Screen {
             }
         } else if (npc.dialogueLine == 0 || npc.dialogueLine >= npc.endDialogue - (npc.startDialogue - 1)) {
             npc.dialogueLine = 0;
+        }
+    }
+
+    TextureRegion currentFrame;
+
+    static class TeleportTiles {
+        int x1, x2, y1, y2;
+        boolean shouldTP = false;
+
+        TeleportTiles(int x1, int y1, int x2, int y2) {
+            this.x1 = x1;
+            this.x2 = x2;
+            this.y1 = y1;
+            this.y2 = y2;
+            this.shouldTP = false;
+        }
+    }
+
+    private void teleportTile(TeleportTiles tile) {
+        tpTiles = new Array<Rectangle>();
+        tpTiles2 = new Array<Rectangle>();
+        Rectangle tp = new Rectangle();
+        tp.x = getXAsCoords(tile.x1);
+        tp.y = getYAsCoords(tile.y1);
+        tp.width = 64;
+        tp.height = 64;
+        tpTiles.add(tp);
+        Rectangle tp2 = new Rectangle();
+        tp2.height = 64;
+        tp2.width = 64;
+        tp2.x = getXAsCoords(tile.x2);
+        tp2.y = getYAsCoords(tile.y2);
+        tpTiles2.add(tp2);
+        if (getXAsGrid() == tile.x1 && getYAsGrid() == tile.y1) {
+            if (tile.shouldTP) {
+                player.x = getXAsCoords(tile.x2);
+                player.y = getYAsCoords(tile.y2);
+            }
+            tile.shouldTP = false;
+        } else if (getXAsGrid() == tile.x2 && getYAsGrid() == tile.y2) {
+            if (tile.shouldTP) {
+                player.x = getXAsCoords(tile.x1);
+                player.y = getYAsCoords(tile.y1);
+            }
+            tile.shouldTP = false;
+        } else {
+            tile.shouldTP = true;
+        }
+        if (teleportAnimation.getKeyFrame(stateTime, true) != null) {
+            currentFrame = teleportAnimation.getKeyFrame(stateTime, true);
+        } else {
+            stateTime = 0;
+        }
+        for (Rectangle tpTile : tpTiles) {
+            game.batch.draw(currentFrame, tpTile.x, tpTile.y, tpTile.width, tpTile.height);
+        }
+        for (Rectangle tpTile : tpTiles2) {
+            game.batch.draw(currentFrame, tpTile.x, tpTile.y, tpTile.width, tpTile.height);
         }
     }
 }

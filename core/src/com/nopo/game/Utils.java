@@ -49,7 +49,7 @@ public class Utils {
             interpUp = true;
         }
         float progress = Math.min(1f, elapsed / lifeTime);   // 0 -> 1
-        return easAlpha.apply(progress);
+        return interpolation.apply(progress);
     }
 
     public static float clampWithWrap(float value, float min, float max) {
