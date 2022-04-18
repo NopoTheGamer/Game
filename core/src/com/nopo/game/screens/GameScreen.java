@@ -26,6 +26,7 @@ public class GameScreen implements Screen {
     Texture testTile;
     Texture rockTile;
     Texture menuBackground;
+    Texture npcBackground;
 
     Rectangle player;
     Rectangle menuHud;
@@ -33,6 +34,9 @@ public class GameScreen implements Screen {
     Rectangle menuHudOption2;
     Array<Rectangle> sandTiles;
     Array<Rectangle> rockTiles;
+
+    NPC npc1 = new NPC("Balls in yo jaw", 3, 3, 1, 3);
+    NPC npc2 = new NPC("sword dude", 10, 2, 3, 5);
 
     enum LastDirection {
         LEFT, RIGHT, UP, DOWN
@@ -57,7 +61,6 @@ public class GameScreen implements Screen {
 
     String debugX = "";
     String debugY = "";
-    NPC npc = new NPC("Test", 3, 3);
 
     public GameScreen(final Game game) {
         this.game = game;
@@ -67,6 +70,7 @@ public class GameScreen implements Screen {
         testTile = new Texture(Gdx.files.internal("test.png"));
         rockTile = new Texture(Gdx.files.internal("rock.png"));
         menuBackground = new Texture(Gdx.files.internal("menu_background.png"));
+        npcBackground = new Texture(Gdx.files.internal("npc_background.png"));
 
         camera = new OrthographicCamera(viewportWidth, viewportHeight * (screenHeight / screenWidth));
         camera.setToOrtho(false, viewportWidth, viewportHeight * (screenHeight / screenWidth));
@@ -164,45 +168,22 @@ public class GameScreen implements Screen {
         Game.cursorPos(Game.pointer, touchPos);
 
         camera.update();
-
         game.batch.setProjectionMatrix(camera.combined);
+
         game.batch.begin();
 
-        int i = 0;
-        for (Rectangle sand : sandTiles) {
-            i++;
-            if (i % 2 == 0) {
-                game.batch.draw(sandTile, sand.x, sand.y, sand.width, sand.height);
-            } else {
-                game.batch.draw(testTile, sand.x, sand.y, sand.width, sand.height);
-            }
-        }
-        for (Rectangle rock : rockTiles) {
-            game.batch.draw(rockTile, rock.x, rock.y, rock.width, rock.height);
-        }
+        drawSand();
+        drawRock();
+
         game.font30.draw(game.batch, "clown", 100, 200);
         game.batch.draw(playerTexture, player.x, player.y, player.width, player.height);
-        game.batch.draw(playerTexture, getXAsCoords(npc.x), getYAsCoords(npc.y), 64, 64);
-        game.batch.draw(menuBackground, (camera.position.x - leftMostCamera) + 25, (camera.position.y - bottomMostCamera) + 140, (960 * .7f) - 50 /*622f*/, 50);
-        if (menuOpen) {
-            menuHud.x = (camera.position.x - leftMostCamera) + 25;
-            menuHud.y = (camera.position.y - bottomMostCamera) + 400;
-            menuHudOption1.x = menuHud.x + 10;
-            menuHudOption1.y = menuHud.y + 70;
-            menuHudOption2.x = menuHud.x + 10;
-            menuHudOption2.y = menuHud.y + 45;
+        drawNPC(npc1);
+        drawNPC(npc2);
 
-            game.batch.draw(menuBackground, menuHud.x, menuHud.y, menuHud.width, menuHud.height);
-            game.batch.draw(game.blackTransparent, menuHudOption1.x, menuHudOption1.y, menuHudOption1.width, menuHudOption1.height);
-            game.batch.draw(game.blackTransparent, menuHudOption2.x, menuHudOption2.y, menuHudOption2.width, menuHudOption2.height);
+        menuOpen(menuOpen);
 
-            game.font23.draw(game.batch, "Save and quit", menuHudOption1.x, menuHudOption1.y + menuHudOption1.height);
-            game.font23.draw(game.batch, "Settings", menuHudOption2.x, menuHudOption2.y + menuHudOption2.height);
-        }
+        game.drawCursor();
 
-        if (Config.usePointer) {
-            game.batch.draw(game.cursor, Game.pointer.x, Game.pointer.y, Game.pointer.width, Game.pointer.height);
-        }
         game.batch.end();
     }
 
@@ -245,6 +226,24 @@ public class GameScreen implements Screen {
                 sand.height = 64;
                 sandTiles.add(sand);
             }
+        }
+    }
+
+    private void drawSand() {
+        int i = 0;
+        for (Rectangle sand : sandTiles) {
+            i++;
+            if (i % 2 == 0) {
+                game.batch.draw(sandTile, sand.x, sand.y, sand.width, sand.height);
+            } else {
+                game.batch.draw(testTile, sand.x, sand.y, sand.width, sand.height);
+            }
+        }
+    }
+
+    private void drawRock() {
+        for (Rectangle rock : rockTiles) {
+            game.batch.draw(rockTile, rock.x, rock.y, rock.width, rock.height);
         }
     }
 
@@ -322,5 +321,47 @@ public class GameScreen implements Screen {
 
     private int getYAsGrid() {
         return (int) (player.y / 64) - 2;
+    }
+
+    private float lockXHud(float x) {
+        return (camera.position.x - leftMostCamera) + x;
+    }
+
+    private float lockYHud(float y) {
+        return (camera.position.y - bottomMostCamera) + y;
+    }
+
+    private void menuOpen(boolean enabled) {
+        if (enabled) {
+            menuHud.x = lockXHud(25);
+            menuHud.y = lockYHud(400);
+            menuHudOption1.x = menuHud.x + 10;
+            menuHudOption1.y = menuHud.y + 70;
+            menuHudOption2.x = menuHud.x + 10;
+            menuHudOption2.y = menuHud.y + 45;
+
+            game.batch.draw(menuBackground, menuHud.x, menuHud.y, menuHud.width, menuHud.height);
+            game.batch.draw(game.blackTransparent, menuHudOption1.x, menuHudOption1.y, menuHudOption1.width, menuHudOption1.height);
+            game.batch.draw(game.blackTransparent, menuHudOption2.x, menuHudOption2.y, menuHudOption2.width, menuHudOption2.height);
+
+            game.font23.draw(game.batch, "Save and quit", menuHudOption1.x, menuHudOption1.y + menuHudOption1.height);
+            game.font23.draw(game.batch, "Settings", menuHudOption2.x, menuHudOption2.y + menuHudOption2.height);
+        }
+    }
+
+    private void drawNPC(NPC npc) {
+        game.batch.draw(playerTexture, getXAsCoords(npc.x), getYAsCoords(npc.y), 64, 64);
+        if (getXAsGrid() == npc.x && getYAsGrid() == npc.y) {
+            if (npc.dialogueLine < npc.endDialogue - (npc.startDialogue - 1)) {
+                game.batch.draw(npcBackground, lockXHud(25), lockYHud(140), (960 * .7f /*672f*/) - 50 /*622f*/, 50);
+                game.font23.draw(game.batch, npc.name, lockXHud(25) + 10, lockYHud(140) + 73);
+                game.font18.draw(game.batch, NPC.getDialogue(npc.dialogueLine, npc), lockXHud(25) + 10, lockYHud(140) + 25);
+                if ((Gdx.input.isKeyJustPressed(Input.Keys.SPACE))) {
+                    npc.dialogueLine++;
+                }
+            }
+        } else if (npc.dialogueLine == 0 || npc.dialogueLine >= npc.endDialogue - (npc.startDialogue - 1)) {
+            npc.dialogueLine = 0;
+        }
     }
 }

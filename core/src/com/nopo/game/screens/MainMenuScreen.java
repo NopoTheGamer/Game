@@ -61,9 +61,7 @@ public class MainMenuScreen implements Screen {
         game.font30.draw(game.batch, "Settings", configRec.x, configRec.y + configRec.height);
 
         // Cursor
-        if (Config.usePointer) {
-            game.batch.draw(game.cursor, Game.pointer.x, Game.pointer.y, Game.pointer.width, Game.pointer.height);
-        }
+        game.drawCursor();
 
 
         game.batch.end();

@@ -12,12 +12,14 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.TimeUtils;
 import com.nopo.game.Config;
+import com.nopo.game.NPC;
 
 public class Game extends com.badlogic.gdx.Game {
 
     public SpriteBatch batch;
     public BitmapFont font30;
     public BitmapFont font23;
+    public BitmapFont font18;
     public Texture cursor;
     public Texture black;
     public Texture blackTransparent;
@@ -50,6 +52,8 @@ public class Game extends com.badlogic.gdx.Game {
         parameter.shadowOffsetX = 1;
         parameter.shadowOffsetY = 1;
         font23 = generator.generateFont(parameter);
+        parameter.size = 18;
+        font18 = generator.generateFont(parameter);
         generator.dispose();
 
 
@@ -58,6 +62,7 @@ public class Game extends com.badlogic.gdx.Game {
         blackTransparent = new Texture(Gdx.files.internal("trans_black.png"));
         pointer = new Rectangle(-10, -10, 32, 32);
 
+        NPC.writeDialogue();
 
         this.setScreen(new MainMenuScreen(this));
     }
@@ -93,6 +98,12 @@ public class Game extends com.badlogic.gdx.Game {
     public static void setUpTouchPos(Vector3 touchPos, OrthographicCamera camera) {
         touchPos.set(Gdx.input.getX(), Gdx.input.getY(), 0);
         camera.unproject(touchPos);
+    }
+
+    public void drawCursor() {
+        if (Config.usePointer) {
+            batch.draw(cursor, Game.pointer.x, Game.pointer.y, Game.pointer.width, Game.pointer.height);
+        }
     }
 
 }

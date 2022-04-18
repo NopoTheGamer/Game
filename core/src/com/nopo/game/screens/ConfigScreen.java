@@ -59,9 +59,7 @@ public class ConfigScreen implements Screen {
         game.font30.draw(game.batch, "Config", 350, 450);
         game.font30.draw(game.batch, "Use custom cursor?", cursorButton.x, cursorButton.y + cursorButton.height);
         // Cursor
-        if (Config.usePointer) {
-            game.batch.draw(game.cursor, Game.pointer.x, Game.pointer.y, Game.pointer.width, Game.pointer.height);
-        }
+        game.drawCursor();
         game.batch.end();
 
         if (Gdx.input.isTouched() && backButton.overlaps(Game.pointer)) {
