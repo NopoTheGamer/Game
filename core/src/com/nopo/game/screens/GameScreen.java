@@ -5,6 +5,7 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
@@ -27,11 +28,13 @@ public class GameScreen implements Screen {
     Texture rockTile;
     Texture menuBackground;
     Texture npcBackground;
+    Texture rightArrow;
 
     Rectangle player;
     Rectangle menuHud;
     Rectangle menuHudOption1;
     Rectangle menuHudOption2;
+    Rectangle selectedOptionArrow;
     Array<Rectangle> sandTiles;
     Array<Rectangle> rockTiles;
 
@@ -71,6 +74,7 @@ public class GameScreen implements Screen {
         rockTile = new Texture(Gdx.files.internal("rock.png"));
         menuBackground = new Texture(Gdx.files.internal("menu_background.png"));
         npcBackground = new Texture(Gdx.files.internal("npc_background.png"));
+        rightArrow = new Texture(Gdx.files.internal("right_arrow.png"));
 
         camera = new OrthographicCamera(viewportWidth, viewportHeight * (screenHeight / screenWidth));
         camera.setToOrtho(false, viewportWidth, viewportHeight * (screenHeight / screenWidth));
@@ -82,25 +86,38 @@ public class GameScreen implements Screen {
         menuHud = new Rectangle(25, 400, 200, 100);
         menuHudOption1 = new Rectangle(10, 55, menuHud.width - 40, menuHud.height - 77);
         menuHudOption2 = new Rectangle(10, 55, menuHud.width - 40, menuHud.height - 77);
+        selectedOptionArrow = new Rectangle(menuHud.x - 15, menuHud.y + 74, 18, 17);
     }
 
 
     private void handleInput() {
+        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
+            menuOpen = !menuOpen;
+            if (!Utils.isEmpty(debugX)) {
+                System.out.println("x: {" + Utils.removeEnd(debugX, ", ") + "}");
+                System.out.println("y: {" + Utils.removeEnd(debugY, ", ") + "}");
+            }
+            debugX = "";
+            debugY = "";
+        }
+        if (menuOpen) return;
+
+
         cameraOffsetX = (camera.position.x - playerCameraOffsetX);
         cameraOffsetY = (camera.position.y - playerCameraOffsetY);
+        if (Gdx.input.isKeyJustPressed(Input.Keys.W)) {
+            if (player.y - (int) cameraOffsetY >= 256) {
+                camera.translate(0, 64, 0);
+            }
+            changePos(0, 1);
+            lastDirection = LastDirection.UP;
+        }
         if (Gdx.input.isKeyJustPressed(Input.Keys.A)) {
             if (player.x - (int) cameraOffsetX <= 64) {
                 camera.translate(-64, 0, 0);
             }
             changePos(-1, 0);
             lastDirection = LastDirection.LEFT;
-        }
-        if (Gdx.input.isKeyJustPressed(Input.Keys.D)) {
-            if (player.x - (int) cameraOffsetX >= 448) {
-                camera.translate(64, 0, 0);
-            }
-            changePos(1, 0);
-            lastDirection = LastDirection.RIGHT;
         }
         if (Gdx.input.isKeyJustPressed(Input.Keys.S)) {
             if (player.y - (int) cameraOffsetY <= 64) {
@@ -109,12 +126,12 @@ public class GameScreen implements Screen {
             changePos(0, -1);
             lastDirection = LastDirection.DOWN;
         }
-        if (Gdx.input.isKeyJustPressed(Input.Keys.W)) {
-            if (player.y - (int) cameraOffsetY >= 256) {
-                camera.translate(0, 64, 0);
+        if (Gdx.input.isKeyJustPressed(Input.Keys.D)) {
+            if (player.x - (int) cameraOffsetX >= 448) {
+                camera.translate(64, 0, 0);
             }
-            changePos(0, 1);
-            lastDirection = LastDirection.UP;
+            changePos(1, 0);
+            lastDirection = LastDirection.RIGHT;
         }
 
         if (Gdx.input.isKeyJustPressed(Input.Keys.CONTROL_LEFT)) {
@@ -124,39 +141,14 @@ public class GameScreen implements Screen {
 
         collisionWithRectangleArray(rockTiles);
 
-        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
-            menuOpen = !menuOpen;
-            save();
-            if (!Utils.isEmpty(debugX)) {
-                System.out.println("x: {" + Utils.removeEnd(debugX, ", ") + "}");
-                System.out.println("y: {" + Utils.removeEnd(debugY, ", ") + "}");
-            }
-            debugX = "";
-            debugY = "";
-        }
-
-        if (Gdx.input.isTouched() && menuOpen && Game.pointer.overlaps(menuHudOption2)) {
-            save();
-            Game.lastScreen = Game.LastScreen.GAME;
-            game.setScreen(new ConfigScreen(game));
-        } else if (Gdx.input.isTouched() && menuOpen && Game.pointer.overlaps(menuHudOption1)) {
-            save();
-            Game.lastScreen = Game.LastScreen.GAME;
-            game.setScreen(new MainMenuScreen(game));
-        }
-
         player.x = MathUtils.clamp(player.x, 64, WORLD_WIDTH - 96);
         player.y = MathUtils.clamp(player.y, 128, WORLD_HEIGHT - 192);
         camera.position.x = MathUtils.clamp(camera.position.x, (viewportWidth * camera.zoom) / 2f, WORLD_WIDTH - (viewportWidth * camera.zoom) / 2f);
         camera.position.y = MathUtils.clamp(camera.position.y, ((viewportHeight * camera.zoom) / 2f) - 6, WORLD_HEIGHT - (viewportHeight * camera.zoom) / 2f);
-
-
     }
 
     @Override
     public void render(float delta) {
-        rockTiles = new Array<Rectangle>();
-        sandTiles = new Array<Rectangle>();
         spawnRocks(new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10, 10, 10, 10, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21}, new int[]{6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 5, 4, 7, 8, 9, 10, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11});
         spawnSand();
 
@@ -176,11 +168,12 @@ public class GameScreen implements Screen {
         drawRock();
 
         game.font30.draw(game.batch, "clown", 100, 200);
+
         game.batch.draw(playerTexture, player.x, player.y, player.width, player.height);
         drawNPC(npc1);
         drawNPC(npc2);
 
-        menuOpen(menuOpen);
+        menuOpen(menuOpen, delta);
 
         game.drawCursor();
 
@@ -217,6 +210,7 @@ public class GameScreen implements Screen {
     }
 
     private void spawnSand() {
+        sandTiles = new Array<Rectangle>();
         for (int i = 0; i < WORLD_WIDTH; i += 64) {
             for (int ii = 0; ii < WORLD_HEIGHT; ii += 64) {
                 Rectangle sand = new Rectangle();
@@ -248,6 +242,7 @@ public class GameScreen implements Screen {
     }
 
     private void spawnRocks(int[] rockPositionsX, int[] rockPositionsY) {
+        rockTiles = new Array<Rectangle>();
         if (rockPositionsX.length == rockPositionsY.length) {
             for (int i = 0; i < rockPositionsX.length; i++) {
                 Rectangle rock = new Rectangle();
@@ -331,21 +326,53 @@ public class GameScreen implements Screen {
         return (camera.position.y - bottomMostCamera) + y;
     }
 
-    private void menuOpen(boolean enabled) {
-        if (enabled) {
-            menuHud.x = lockXHud(25);
-            menuHud.y = lockYHud(400);
-            menuHudOption1.x = menuHud.x + 10;
-            menuHudOption1.y = menuHud.y + 70;
-            menuHudOption2.x = menuHud.x + 10;
-            menuHudOption2.y = menuHud.y + 45;
+    private void menuOpen(boolean enabled, float delta) {
+        boolean optionOne = false;
+        boolean optionTwo = false;
 
-            game.batch.draw(menuBackground, menuHud.x, menuHud.y, menuHud.width, menuHud.height);
-            game.batch.draw(game.blackTransparent, menuHudOption1.x, menuHudOption1.y, menuHudOption1.width, menuHudOption1.height);
-            game.batch.draw(game.blackTransparent, menuHudOption2.x, menuHudOption2.y, menuHudOption2.width, menuHudOption2.height);
+        if (!enabled) return;
 
-            game.font23.draw(game.batch, "Save and quit", menuHudOption1.x, menuHudOption1.y + menuHudOption1.height);
-            game.font23.draw(game.batch, "Settings", menuHudOption2.x, menuHudOption2.y + menuHudOption2.height);
+        if (Gdx.input.isTouched() && Game.pointer.overlaps(menuHudOption2)) optionOne = true;
+        if (Gdx.input.isTouched() && Game.pointer.overlaps(menuHudOption1)) optionTwo = true;
+        menuHud.x = lockXHud(25);
+        menuHud.y = lockYHud(400);
+        menuHudOption1.x = menuHud.x + 10;
+        menuHudOption1.y = menuHud.y + 70;
+        menuHudOption2.x = menuHud.x + 10;
+        menuHudOption2.y = menuHud.y + 45;
+
+        if (Gdx.input.isKeyJustPressed(Input.Keys.W)) {
+            selectedOptionArrow.y += 25;
+        }
+        if (Gdx.input.isKeyJustPressed(Input.Keys.S)) {
+            selectedOptionArrow.y -= 25;
+        }
+        int selectedOption = (int) (474 - selectedOptionArrow.y) / 25;
+        if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER) || Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
+            System.out.println();
+            switch (selectedOption) {
+                case 0 -> optionOne = true;
+                case 1 -> optionTwo = true;
+            }
+        }
+//        if (selectedOption < 0) selectedOptionArrow.y = 449;
+//        if (selectedOption > 1) selectedOptionArrow.y = 474; // math clamp with wrap
+        selectedOptionArrow.y = Utils.clampWithWrap(selectedOptionArrow.y, 449, 474);
+
+        game.batch.draw(menuBackground, menuHud.x, menuHud.y, menuHud.width, menuHud.height);
+        game.batch.draw(rightArrow, lockXHud(selectedOptionArrow.x + (Utils.interp(Interpolation.swing, delta) * 6)), lockYHud(selectedOptionArrow.y), 18, 17);
+        game.batch.draw(game.blackTransparent, menuHudOption1.x, menuHudOption1.y, menuHudOption1.width, menuHudOption1.height);
+        game.batch.draw(game.blackTransparent, menuHudOption2.x, menuHudOption2.y, menuHudOption2.width, menuHudOption2.height);
+
+        game.font23.draw(game.batch, "Save and quit", menuHudOption1.x, menuHudOption1.y + menuHudOption1.height);
+        game.font23.draw(game.batch, "Settings", menuHudOption2.x, menuHudOption2.y + menuHudOption2.height);
+
+        Game.lastScreen = Game.LastScreen.GAME;
+        save();
+        if (optionOne) {
+            game.setScreen(new MainMenuScreen(game));
+        } else if (optionTwo) {
+            game.setScreen(new ConfigScreen(game));
         }
     }
 

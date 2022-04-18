@@ -16,6 +16,7 @@ public class ConfigScreen implements Screen {
     OrthographicCamera camera;
 
     Texture background;
+    Texture leftArrow;
 
     Rectangle backButton;
     Rectangle cursorButton;
@@ -34,6 +35,7 @@ public class ConfigScreen implements Screen {
         camera.update();
 
         background = new Texture(Gdx.files.internal("settings_background.png"));
+        leftArrow = new Texture(Gdx.files.internal("left_arrow.png"));
 
         backButton = new Rectangle(30, 30, 60, 60);
         cursorButton = new Rectangle(30, 100, 300, 30);
@@ -54,6 +56,7 @@ public class ConfigScreen implements Screen {
         game.batch.draw(background, 0, 0, 800, 480);
         // Button
         game.batch.draw(game.black, backButton.x, backButton.y, backButton.width, backButton.height);
+        game.batch.draw(leftArrow, backButton.x, backButton.y, backButton.width, backButton.height);
         game.batch.draw(game.black, cursorButton.x, cursorButton.y, cursorButton.width, cursorButton.height);
         // Text
         game.font30.draw(game.batch, "Config", 350, 450);
